@@ -5,7 +5,7 @@ resources:
     source:
       branch: master
       uri: git@github.com:bcdurden/control_plane_paver.git
-      private_key: ((github-key))
+      private_key: ((creds.github-key))
 jobs:
   - name: job
     public: true
@@ -16,22 +16,28 @@ jobs:
           platform: linux
           image_resource:
             type: registry-image
-            source: { repository: hashicorp/terraform }
+            source: 
+              repository: hashicorp/terraform
+              tag: 0.11.14
           inputs:
           - name: platform-automation
+          outputs:
+          - name: terraform-output
           params:
-            AWS_ACCESS_KEY_ID: ((aws-creds.aws-access-key))
-            AWS_SECRET_ACCESS_KEY: ((aws-creds.aws-secret-key))
+            AWS_ACCESS_KEY_ID: ((creds.aws-access-key))
+            AWS_SECRET_ACCESS_KEY: ((creds.aws-secret-key))
             AWS_DEFAULT_REGION: us-east-2
           run:
-            path: terraform
-            args: ["init"]
+            dir: platform-automation/custom_tasks
+            path: terraform_init.sh
       - task: resource-task
         config:
           platform: linux
           image_resource:
             type: registry-image
-            source: { repository: hashicorp/terraform }
+            source: 
+              repository: hashicorp/terraform
+              tag: 0.11.14
           inputs:
             - name: platform-automation
           run:
