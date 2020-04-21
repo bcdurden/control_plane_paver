@@ -40,6 +40,7 @@ jobs:
               tag: 0.11.14
           inputs:
             - name: platform-automation
+            - name: terraform-output
           run:
             path: ls
-            args: ["platform-automation/"]
+            args: ["terraform-output/"]
