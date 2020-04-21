@@ -2,7 +2,5 @@
 
 cd platform-automation/terraform
     terraform init
-    tar czvf terraform.tgz .terraform/
+    tar czvf ../../terraform-output/terraform.tgz .terraform/
 cd ../../
-
-mv terraform.tgz ../../terraform-output
