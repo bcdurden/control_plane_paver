@@ -28,7 +28,8 @@ jobs:
             AWS_SECRET_ACCESS_KEY: ((creds.aws-secret-key))
             AWS_DEFAULT_REGION: us-east-2
           run:
-            path: platform-automation/custom_tasks/terraform_init.sh
+            path: sh
+            args: ["platform-automation/custom_tasks/terraform_init.sh"]
       - task: resource-task
         config:
           platform: linux
