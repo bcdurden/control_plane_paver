@@ -1,6 +1,8 @@
 #!/bin/bash
 
-cd ../platform-automation/terraform
-terraform init
-tar czvf terraform.tgz .terraform/
+pushd platform-automation/terraform
+    terraform init
+    tar czvf terraform.tgz .terraform/
+popd
+
 mv terraform.tgz ../../terraform-output
