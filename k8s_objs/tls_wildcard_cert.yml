@@ -1,0 +1,11 @@
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: tls-certificate
+  namespace: control-plane-main
+spec:
+  dnsNames:
+    - "*.paver.pivotal-poc.solutions"
+  secretName: tls-certificate
+  issuerRef:
+    name: ca-issuer
