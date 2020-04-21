@@ -1,8 +1,8 @@
 #!/bin/sh
 
-pushd platform-automation/terraform
+cd platform-automation/terraform
     terraform init
     tar czvf terraform.tgz .terraform/
-popd
+cd ../../
 
 mv terraform.tgz ../../terraform-output
