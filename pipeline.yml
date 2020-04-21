@@ -11,6 +11,21 @@ jobs:
     public: true
     plan:
       - get: platform-automation
+      - task: get-certs
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source: 
+              repository: alpine
+          params:
+            TLS: ((tls-certificate))
+          outputs:
+            - name: tls-certificate
+          run:
+            path: sh
+            args: ["get_cert.sh"]
+
       - task: terraform-plan
         config:
           platform: linux
@@ -21,13 +36,11 @@ jobs:
               tag: 0.11.14
           inputs:
           - name: platform-automation
+          - name: tls-certificate
           params:
             AWS_ACCESS_KEY_ID: ((creds.aws-access-key))
             AWS_SECRET_ACCESS_KEY: ((creds.aws-secret-key))
             AWS_DEFAULT_REGION: us-east-2
-            TLS_CA: ((tls-certificate.\"ca.crt\"))
-            TLS_KEY: ((tls-certificate.\"tls.key\"))
-            TLS_CERT: ((tls-certificate.\"tls.crt\"))
           outputs:
           - name: terraform-output
           run:
