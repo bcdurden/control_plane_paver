@@ -23,10 +23,6 @@ jobs:
           - name: platform-automation
           outputs:
           - name: terraform-output
-          params:
-            AWS_ACCESS_KEY_ID: ((creds.aws-access-key))
-            AWS_SECRET_ACCESS_KEY: ((creds.aws-secret-key))
-            AWS_DEFAULT_REGION: us-east-2
           run:
             path: sh
             args: ["platform-automation/custom_tasks/terraform_init.sh"]
@@ -41,6 +37,12 @@ jobs:
           inputs:
             - name: platform-automation
             - name: terraform-output
+          outputs:
+          - name: terraform-output
+          params:
+            AWS_ACCESS_KEY_ID: ((creds.aws-access-key))
+            AWS_SECRET_ACCESS_KEY: ((creds.aws-secret-key))
+            AWS_DEFAULT_REGION: us-east-2
           run:
-            path: ls
-            args: ["terraform-output/"]
+            path: sh
+            args: ["platform-automation/custom_tasks/terraform_plan.sh"]
