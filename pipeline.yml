@@ -25,7 +25,9 @@ jobs:
             AWS_ACCESS_KEY_ID: ((creds.aws-access-key))
             AWS_SECRET_ACCESS_KEY: ((creds.aws-secret-key))
             AWS_DEFAULT_REGION: us-east-2
-            TLS_CA: ((tls-certificate.ca.crt))
+            TLS_CA: ((tls-certificate.\"ca.crt\"))
+            TLS_KEY: ((tls-certificate.\"tls.key\"))
+            TLS_CERT: ((tls-certificate.\"tls.crt\"))
           outputs:
           - name: terraform-output
           run:
