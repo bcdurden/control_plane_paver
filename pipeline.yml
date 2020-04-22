@@ -40,7 +40,7 @@ jobs:
             path: sh
             args: ["platform-automation/custom_tasks/get_cert.sh"]
 
-      - task: terraform-plan
+      - task: terraform
         config:
           platform: linux
           image_resource:
@@ -59,28 +59,7 @@ jobs:
           - name: terraform-output
           run:
             path: sh
-            args: ["platform-automation/custom_tasks/terraform_init.sh"]
-
-      - task: terraform-apply
-        config:
-          platform: linux
-          image_resource:
-            type: registry-image
-            source: 
-              repository: hashicorp/terraform
-              tag: 0.11.14
-          inputs:
-            - name: platform-automation
-            - name: terraform-output
-          outputs:
-          - name: terraform-output
-          params:
-            AWS_ACCESS_KEY_ID: ((creds.aws-access-key))
-            AWS_SECRET_ACCESS_KEY: ((creds.aws-secret-key))
-            AWS_DEFAULT_REGION: us-east-2
-          run:
-            path: sh
-            args: ["platform-automation/custom_tasks/terraform_apply.sh"]
+            args: ["platform-automation/custom_tasks/terraform.sh"]
         ensure: &put-state
           do:
           - put: tf-state
