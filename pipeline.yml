@@ -16,7 +16,7 @@ resources:
       skip_ssl_verification: true
       region_name: us-east-2
       endpoint: ((s3_endpoint))
-      versioned_file: tfstate
+      versioned_file: terraform.tfstate
       initial_content_text: '{}'
       initial_version: 'empty-start'
 jobs:
@@ -61,8 +61,8 @@ jobs:
           run:
             path: sh
             args: ["platform-automation/custom_tasks/terraform_init.sh"]
-            
-      - task: resource-task
+
+      - task: terraform-apply
         config:
           platform: linux
           image_resource:
@@ -82,3 +82,8 @@ jobs:
           run:
             path: sh
             args: ["platform-automation/custom_tasks/terraform_apply.sh"]
+          ensure: &put-state
+            do:
+            - put: tf-state
+              params:
+                file: terraform-output/terraform.tfstate
