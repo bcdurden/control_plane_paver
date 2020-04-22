@@ -13,9 +13,7 @@ resources:
       bucket: pivotal-poc-bucket-1
       access_key_id: ((creds.aws-access-key))
       secret_access_key: ((creds.aws-secret-key))
-      skip_ssl_verification: true
       region_name: us-east-2
-      endpoint: ((s3_endpoint))
       versioned_file: terraform.tfstate
       initial_content_text: '{}'
       initial_version: 'empty-start'
@@ -24,6 +22,7 @@ jobs:
     public: true
     plan:
       - get: platform-automation
+      - get: tf-state
       - task: get-certs
         config:
           platform: linux
