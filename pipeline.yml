@@ -10,15 +10,15 @@ resources:
   - name: tf-state
     type: s3
     source:
-      bucket: pivotal-poc-bucket-1
+      bucket: piv-poc-bucket-1
       access_key_id: ((creds.aws-access-key))
       secret_access_key: ((creds.aws-secret-key))
-      region_name: us-east-2
+      region_name: us-east-1
       versioned_file: terraform.tfstate
       initial_content_text: '{}'
       initial_version: 'empty-start'
 jobs:
-  - name: job
+  - name: pave
     public: true
     plan:
       - get: platform-automation
