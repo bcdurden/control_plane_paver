@@ -6,6 +6,19 @@ resources:
       branch: master
       uri: git@github.com:bcdurden/control_plane_paver.git
       private_key: ((creds.github-key))
+
+  - name: tf-state
+    type: s3
+    source:
+      bucket: pivotal-poc-bucket-1
+      access_key_id: ((creds.aws-access-key))
+      secret_access_key: ((creds.aws-secret-key))
+      skip_ssl_verification: true
+      region_name: us-east-2
+      endpoint: ((s3_endpoint))
+      versioned_file: tfstate
+      initial_content_text: '{}'
+      initial_version: 'empty-start'
 jobs:
   - name: job
     public: true
@@ -18,13 +31,15 @@ jobs:
             type: registry-image
             source: 
               repository: alpine
+          inputs:
+          - name: platform-automation
           params:
             TLS: ((tls-certificate))
           outputs:
             - name: tls-certificate
           run:
             path: sh
-            args: ["get_cert.sh"]
+            args: ["platform-automation/custom_tasks/get_cert.sh"]
 
       - task: terraform-plan
         config:
@@ -46,6 +61,7 @@ jobs:
           run:
             path: sh
             args: ["platform-automation/custom_tasks/terraform_init.sh"]
+            
       - task: resource-task
         config:
           platform: linux
