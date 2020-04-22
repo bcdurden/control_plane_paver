@@ -82,8 +82,8 @@ jobs:
           run:
             path: sh
             args: ["platform-automation/custom_tasks/terraform_apply.sh"]
-          ensure: &put-state
-            do:
-            - put: tf-state
-              params:
-                file: terraform-output/terraform.tfstate
+        ensure: &put-state
+          do:
+          - put: tf-state
+            params:
+              file: terraform-output/terraform.tfstate
