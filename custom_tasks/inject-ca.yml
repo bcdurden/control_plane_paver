@@ -15,9 +15,8 @@ outputs:
 run:
   path: bash
   args: 
-  - -ec
+  - "-c"
   - |
-
   cat /var/version && echo ""
   set -eux
 
