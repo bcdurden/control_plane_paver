@@ -8,7 +8,6 @@ params:
   SKIP_PRIVILEGED: false
   CA_PEM:
 inputs:
-  - name: source
   - name: image
 outputs:
   - name: modified
