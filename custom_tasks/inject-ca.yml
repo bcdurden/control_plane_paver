@@ -52,5 +52,5 @@ run:
     # export the container filesystem and compress
     mkdir -p modified/rootfs/
     docker export $(cat /tmp/container.cid) | tar --exclude="dev/*" -xf - -C modified/rootfs/
-
+    echo "Succesfully exported WCF image"
     stop_docker
