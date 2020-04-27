@@ -17,7 +17,6 @@ run:
   - "-c"
   - |
     cat /var/version && echo ""
-    cat /opt/resource/common.sh
 
     source /opt/resource/common.sh
 
