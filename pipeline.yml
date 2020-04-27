@@ -1,16 +1,10 @@
 ---
 resource_types:
 - name: pivnet
-  type: s3
+  type: docker-image
   source:
-    access_key_id: ((creds.aws-access-key))
-    secret_access_key: ((creds.aws-secret-key))
-    region_name: ((s3_region_name))
-    bucket: ((s3_pivnet_products_bucket))
-    skip_ssl_verification: true
-    versioned_file: platform-images/release-pivnet-resource.tgz
-  params:
-    unpack: true
+    repository: pivotalcf/pivnet-resource
+    tag: latest-final
 
 resources:
 - name: paver-automation
@@ -23,7 +17,7 @@ resources:
 - name: platform-automation
   type: pivnet
   source:
-    api_token: ((pivnet_token))
+    api_token: ((pivnet-token))
     product_slug: platform-automation
     product_version: (.*)
     sort_by: semver
@@ -39,13 +33,6 @@ resources:
     initial_content_text: '{}'
     initial_version: 'empty-start'
 
-- name: platform-automation
-  type: pivnet
-  source:
-    api_token: ((pivnet_token))
-    product_slug: platform-automation
-    product_version: (.*)
-    sort_by: semver
 jobs:
   - name: build-cert-image
     public: true

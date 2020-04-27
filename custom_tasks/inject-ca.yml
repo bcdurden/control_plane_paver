@@ -18,43 +18,42 @@ run:
   args: 
   - -ec
   - |
+    cat /var/version && echo ""
+    set -eux
 
-  cat /var/version && echo ""
-  set -eux
+    source /opt/resource/common.sh
 
-  source /opt/resource/common.sh
+    # start docker
+    max_concurrent_downloads=3
+    max_concurrent_uploads=3
+    start_docker ${max_concurrent_downloads} ${max_concurrent_uploads}
 
-  # start docker
-  max_concurrent_downloads=3
-  max_concurrent_uploads=3
-  start_docker ${max_concurrent_downloads} ${max_concurrent_uploads}
+    # import docker container filesystem from tgz
+    image_file="$(find image/*.tgz 2>/dev/null | head -n1)"
+    echo "importing ${image_file} as current:latest"
+    docker import "${image_file}" current:latest
 
-  # import docker container filesystem from tgz
-  image_file="$(find image/*.tgz 2>/dev/null | head -n1)"
-  echo "importing ${image_file} as current:latest"
-  docker import "${image_file}" current:latest
+    # build Dockerfile
+    cat << 'EOF' > Dockerfile
+    FROM current:latest
+    ARG ca_pem
+    RUN echo "${ca_pem}" > /usr/local/share/ca-certificates/custom.crt \
+      && update-ca-certificates
+    EOF
 
-  # build Dockerfile
-  cat << 'EOF' > Dockerfile
-  FROM current:latest
-  ARG ca_pem
-  RUN echo "${ca_pem}" > /usr/local/share/ca-certificates/custom.crt \
-    && update-ca-certificates
-  EOF
+    # build docker image with CA as env param
+    docker build --build-arg ca_pem="${CA_PEM}" -t modified:latest .
+    docker images
 
-  # build docker image with CA as env param
-  docker build --build-arg ca_pem="${CA_PEM}" -t modified:latest .
-  docker images
+    # extract the metadata from image
+    docker run \
+      --cidfile=/tmp/container.cid \
+      -v /opt/resource/print-metadata:/tmp/print-metadata \
+      --entrypoint /tmp/print-metadata  \
+      modified:latest > modified/metadata.json
 
-  # extract the metadata from image
-  docker run \
-    --cidfile=/tmp/container.cid \
-    -v /opt/resource/print-metadata:/tmp/print-metadata \
-    --entrypoint /tmp/print-metadata  \
-    modified:latest > modified/metadata.json
+    # export the container filesystem and compress
+    mkdir -p modified/rootfs/
+    docker export $(cat /tmp/container.cid) | tar --exclude="dev/*" -xf - -C modified/rootfs/
 
-  # export the container filesystem and compress
-  mkdir -p modified/rootfs/
-  docker export $(cat /tmp/container.cid) | tar --exclude="dev/*" -xf - -C modified/rootfs/
-
-  stop_docker
+    stop_docker
