@@ -1,27 +1,83 @@
 ---
-resources:
-  - name: platform-automation
-    type: git
-    source:
-      branch: master
-      uri: git@github.com:bcdurden/control_plane_paver.git
-      private_key: ((creds.github-key))
+resource_types:
+- name: pivnet
+  type: s3
+  source:
+    access_key_id: ((creds.aws-access-key))
+    secret_access_key: ((creds.aws-secret-key))
+    region_name: ((s3_region_name))
+    bucket: ((s3_pivnet_products_bucket))
+    skip_ssl_verification: true
+    versioned_file: platform-images/release-pivnet-resource.tgz
+  params:
+    unpack: true
 
-  - name: tf-state
-    type: s3
-    source:
-      bucket: piv-poc-bucket-1
-      access_key_id: ((creds.aws-access-key))
-      secret_access_key: ((creds.aws-secret-key))
-      region_name: us-east-1
-      versioned_file: terraform.tfstate
-      initial_content_text: '{}'
-      initial_version: 'empty-start'
+resources:
+- name: paver-automation
+  type: git
+  source:
+    branch: master
+    uri: git@github.com:bcdurden/control_plane_paver.git
+    private_key: ((creds.github-key))
+
+- name: platform-automation
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: platform-automation
+    product_version: (.*)
+    sort_by: semver
+
+- name: tf-state
+  type: s3
+  source:
+    bucket: ((s3_pivnet_products_bucket))
+    access_key_id: ((creds.aws-access-key))
+    secret_access_key: ((creds.aws-secret-key))
+    region_name: ((s3_region_name))
+    versioned_file: terraform.tfstate
+    initial_content_text: '{}'
+    initial_version: 'empty-start'
+
+- name: platform-automation
+  type: pivnet
+  source:
+    api_token: ((pivnet_token))
+    product_slug: platform-automation
+    product_version: (.*)
+    sort_by: semver
 jobs:
+  - name: build-cert-image
+    public: true
+    plan:
+    - get: paver-automation
+    - get: platform-automation-image
+      params:
+        unpack: false
+        globs:
+          - "platform-automation-image*.tgz"
+      resource: platform-automation
+    - get: platform-automation-tasks
+      params:
+        unpack: true
+        globs:
+          - "platform-automation-tasks*.zip"
+      resource: platform-automation
+    
+    - task: inject-wcf-certs
+      file: paver-automation/custom_tasks/inject-ca.yml
+      privileged: true # this task must be privileged as it runs docker to build a new image
+      input_mapping:
+        image: platform-automation-image
+      output_mapping:
+        modified: platform-automation-image-wcf
+      params:
+        CA_PEM: ((wcf_root_cert))
+
   - name: pave
     public: true
     plan:
-      - get: platform-automation
+      - get: paver-automation
       - get: tf-state
       - task: get-certs
         config:
@@ -31,14 +87,14 @@ jobs:
             source: 
               repository: alpine
           inputs:
-          - name: platform-automation
+          - name: paver-automation
           params:
             TLS: ((tls-certificate))
           outputs:
             - name: tls-certificate
           run:
             path: sh
-            args: ["platform-automation/custom_tasks/get_cert.sh"]
+            args: ["paver-automation/custom_tasks/get_cert.sh"]
 
       - task: terraform
         config:
@@ -49,7 +105,7 @@ jobs:
               repository: hashicorp/terraform
               tag: 0.11.14
           inputs:
-          - name: platform-automation
+          - name: paver-automation
           - name: tls-certificate
           params:
             AWS_ACCESS_KEY_ID: ((creds.aws-access-key))
@@ -59,7 +115,7 @@ jobs:
           - name: terraform-output
           run:
             path: sh
-            args: ["platform-automation/custom_tasks/terraform.sh"]
+            args: ["paver-automation/custom_tasks/terraform.sh"]
         ensure: &put-state
           do:
           - put: tf-state
