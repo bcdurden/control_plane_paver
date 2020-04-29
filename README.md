@@ -20,3 +20,16 @@ Since this is an experiment, the init script is written with a Mac or Ubuntu use
 
 ## Standing up the Pipeline
 TBC
+
+### Pipeline Secrets (and how they work)
+TBC
+```bash
+➜ control_plane_paver git:(master) ✗ kubectl get secrets -n control-plane-main
+NAME                  TYPE                                  DATA   AGE
+ca-key-pair           Opaque                                2      7d21h
+creds                 Opaque                                3      6d23h
+default-token-s6rwp   kubernetes.io/service-account-token   3      8d
+github-key            Opaque                                1      8d
+pivnet-token          Opaque                                1      43h
+tls-certificate       kubernetes.io/tls                     3      7d21h
+```
