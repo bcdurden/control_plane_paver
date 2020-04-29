@@ -1,4 +1,4 @@
-s3_region_name: us-east-2
+s3_region_name: us-east-1
 s3_pivnet_products_bucket: piv-poc-bucket-1
 wcf_root_cert: |
   -----BEGIN CERTIFICATE-----

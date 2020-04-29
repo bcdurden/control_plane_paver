@@ -51,13 +51,13 @@ jobs:
           - "platform-automation-tasks*.zip"
       resource: platform-automation
     
-    - task: inject-wcf-certs
+    - task: inject-certs
       file: paver-automation/custom_tasks/inject-ca.yml
       privileged: true # this task must be privileged as it runs docker to build a new image
       input_mapping:
         image: platform-automation-image
       output_mapping:
-        modified: platform-automation-image-wcf
+        modified: platform-automation-image-new
       params:
         CA_PEM: ((wcf_root_cert))
 

@@ -1,3 +1,4 @@
+---
 platform: linux
 image_resource:
   type: docker-image
@@ -18,6 +19,7 @@ run:
   - |
     cat /var/version && echo ""
 
+    # source env
     source /opt/resource/common.sh
 
     # start docker
@@ -38,18 +40,18 @@ run:
       && update-ca-certificates
     EOF
 
-    # build docker image with CA as env param
+    # build docker image with CA as runtime arg
     docker build --build-arg ca_pem="${CA_PEM}" -t modified:latest .
     docker images
 
-    # extract the metadata from image
+    # extract metadata from image
     docker run \
       --cidfile=/tmp/container.cid \
       -v /opt/resource/print-metadata:/tmp/print-metadata \
       --entrypoint /tmp/print-metadata  \
       modified:latest > modified/metadata.json
 
-    # export the container filesystem and compress
+    # export the container filesystem and untar to output
     mkdir -p modified/rootfs/
     docker export $(cat /tmp/container.cid) | tar --exclude="dev/*" -xf - -C modified/rootfs/
     echo "Succesfully exported WCF image"
