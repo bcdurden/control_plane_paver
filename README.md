@@ -1,5 +1,5 @@
 # Control Plane Paver
-This is a bit of a thought-experiment on what a bootstrap-system might look like for building a control plane in an IaaS. I've used AWS here as that is what I'm most experienced with.
+This is a bit of a thought-experiment on what a bootstrap-system might look like for building a control plane in an IaaS without needing manual installation of an OpsManager. I've used AWS here as that is what I'm most experienced with.
 
 ## Tools Used
 This experiment uses a combination of tools to achieve the desired outcome
