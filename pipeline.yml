@@ -33,6 +33,15 @@ resources:
     initial_content_text: '{}'
     initial_version: 'empty-start'
 
+- name: state
+  type: s3
+  source:
+    access_key_id: ((s3_access_key_id))
+    secret_access_key: ((s3_secret_access_key))
+    region_name: ((s3_region_name))
+    bucket: ((s3_pivnet_products_bucket))
+    versioned_file: state/state.yml
+
 jobs:
   - name: build-cert-image
     public: true
@@ -40,7 +49,7 @@ jobs:
     - get: paver-automation
     - get: platform-automation-image
       params:
-        unpack: false
+        unpack: true
         globs:
           - "platform-automation-image*.tgz"
       resource: platform-automation
@@ -50,16 +59,7 @@ jobs:
         globs:
           - "platform-automation-tasks*.zip"
       resource: platform-automation
-    
-    - task: inject-certs
-      file: paver-automation/custom_tasks/inject-ca.yml
-      privileged: true # this task must be privileged as it runs docker to build a new image
-      input_mapping:
-        image: platform-automation-image
-      output_mapping:
-        modified: platform-automation-image-new
-      params:
-        CA_PEM: ((wcf_root_cert))
+    - get: state
 
   - name: pave
     public: true
@@ -108,3 +108,60 @@ jobs:
           - put: tf-state
             params:
               file: terraform-output/terraform.tfstate
+      - task: get-tfstate-json
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source: 
+              repository: hashicorp/terraform
+              tag: 0.11.14
+          inputs:
+          - name: terraform-output
+          outputs:
+          - name: terraform-output
+          run:
+            path: sh
+            args: ["terraform", "output", "-json", "-state=terraform-output/tf.state", ">", "terraform-output/tfstate.json"]
+            
+      - task: create-opsman-config
+        image: platform-automation-image
+        config:
+          platform: linux
+          inputs:
+          - name: paver-automation
+          - name: terraform-output
+          params: 
+            CONFIG_FILE_DIR: paver-automation/templates/opsman/((opsman_major_version))
+            CONFIG_FILE: opsman-product-config.yml
+          outputs:
+          - name: opsman-config
+          run:
+            path: bash
+            args: ["paver-automation/custom_tasks/create-opsman-config.sh"]
+
+      # - task: download-opsman
+      #   image: platform-automation-image
+      #   file: platform-automation-tasks/tasks/download-product.yml
+      #   params:
+      #     CONFIG_FILE: templates/opsman/((opsman_version))/opsman-product-config.yml
+      #   input_mapping:
+      #     config: interpolated-configs
+      #   output_mapping:
+      #     downloaded-product: opsman-image 
+
+      # - task: create-vm
+      #   image: platform-automation-image
+      #   file: platform-automation-tasks/tasks/create-vm.yml
+      #   input_mapping:
+      #     config: interpolated-configs
+      #     image: opsman-image
+      #     vars: interpolated-configs
+      #   params:
+      #     OPSMAN_CONFIG_FILE: templates/opsman/((opsman_version))/opsman.yml
+      #     VARS_FILES: vars/environments/((foundation))/config-director/vars/opsman.yml
+      #   ensure: &put-state
+      #     do:
+      #     - put: state
+      #       params:
+      #         file: generated-state/state.yml
