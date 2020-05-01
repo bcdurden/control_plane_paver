@@ -36,8 +36,8 @@ resources:
 - name: state
   type: s3
   source:
-    access_key_id: ((s3_access_key_id))
-    secret_access_key: ((s3_secret_access_key))
+    access_key_id: ((creds.aws-access-key))
+    secret_access_key: ((creds.aws-secret-key))
     region_name: ((s3_region_name))
     bucket: ((s3_pivnet_products_bucket))
     versioned_file: state/state.yml
@@ -66,6 +66,7 @@ jobs:
     plan:
       - get: paver-automation
       - get: tf-state
+
       - task: get-certs
         config:
           platform: linux
@@ -108,6 +109,13 @@ jobs:
           - put: tf-state
             params:
               file: terraform-output/terraform.tfstate
+
+  - name: build-opsman
+    public: true
+    plan:
+      - get: paver-automation
+      - get: tf-state
+
       - task: get-tfstate-json
         config:
           platform: linux
@@ -117,12 +125,12 @@ jobs:
               repository: hashicorp/terraform
               tag: 0.11.14
           inputs:
-          - name: terraform-output
+          - name: tf-state
           outputs:
           - name: terraform-output
           run:
             path: sh
-            args: ["terraform", "output", "-json", "-state=terraform-output/tf.state", ">", "terraform-output/tfstate.json"]
+            args: ["terraform", "output", "-json", "-state=tf-state/terraform.tfstate", ">", "terraform-output/tfstate.json"]
             
       - task: create-opsman-config
         image: platform-automation-image
